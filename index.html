@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Chiến Binh Đời Thực</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Canvas Confetti cho hiệu ứng thăng cấp -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #090d16;
+      color: #f1f5f9;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .glass-card {
+      background: rgba(19, 26, 42, 0.8);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+<body class="pb-24">
+
+  <!-- TOP BAR: THÔNG TIN NHÂN VẬT -->
+  <header class="p-4 sticky top-0 z-40 bg-[#090d16]/90 backdrop-blur-md border-b border-slate-800">
+    <div class="flex items-center gap-3">
+      <div id="avatarBox" class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center text-2xl shadow-lg border border-amber-400/30">
+        ⚔️
+      </div>
+      <div class="flex-1">
+        <div class="flex justify-between items-center mb-1">
+          <span class="font-extrabold text-base tracking-wide text-white" id="charTitle">Chiến Binh Tập Sự</span>
+          <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30" id="levelBadge">Cấp 1</span>
+        </div>
+        <!-- Thanh EXP -->
+        <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-700">
+          <div id="expBar" class="bg-gradient-to-r from-indigo-500 to-cyan-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
+        </div>
+        <div class="flex justify-between items-center text-[10px] text-slate-400 mt-1 font-semibold">
+          <span id="expText">0 / 100 EXP</span>
+          <span class="text-amber-400 flex items-center gap-1 font-bold">
+            <i class="ph-fill ph-coins text-xs"></i> <span id="goldVal">0</span> Vàng
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 CHỈ SỐ CỐT LÕI (RADIAL CHIPS) -->
+    <div class="grid grid-cols-5 gap-1.5 mt-3 pt-3 border-t border-slate-800/80 text-center">
+      <div class="bg-slate-900/60 p-1.5 rounded-xl border border-slate-800">
+        <div class="text-[10px] text-rose-400 font-bold">STR Thể lực</div>
+        <div class="text-sm font-extrabold text-white mt-0.5" id="stat_STR">0</div>
+      </div>
+      <div class="bg-slate-900/60 p-1.5 rounded-xl border border-slate-800">
+        <div class="text-[10px] text-sky-400 font-bold">INT Trí tuệ</div>
+        <div class="text-sm font-extrabold text-white mt-0.5" id="stat_INT">0</div>
+      </div>
+      <div class="bg-slate-900/60 p-1.5 rounded-xl border border-slate-800">
+        <div class="text-[10px] text-amber-400 font-bold">WIS Tài chính</div>
+        <div class="text-sm font-extrabold text-white mt-0.5" id="stat_WIS">0</div>
+      </div>
+      <div class="bg-slate-900/60 p-1.5 rounded-xl border border-slate-800">
+        <div class="text-[10px] text-purple-400 font-bold">CHA Quản trị</div>
+        <div class="text-sm font-extrabold text-white mt-0.5" id="stat_CHA">0</div>
+      </div>
+      <div class="bg-slate-900/60 p-1.5 rounded-xl border border-slate-800">
+        <div class="text-[10px] text-emerald-400 font-bold">SPI Gia đình</div>
+        <div class="text-sm font-extrabold text-white mt-0.5" id="stat_SPI">0</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- NỘI DUNG TỪNG TAB -->
+  <main class="p-4 max-w-lg mx-auto">
+    <!-- TAB 1: NHIỆM VỤ (QUESTS) -->
+    <div id="tab-quests" class="space-y-4">
+      <!-- Form nhập nhanh buổi sáng -->
+      <div class="glass-card rounded-2xl p-4 shadow-xl">
+        <h3 class="text-sm font-bold text-slate-200 mb-2.5 flex items-center gap-2">
+          <i class="ph-bold ph-lightning text-amber-400 text-base"></i> Khởi tạo nhiệm vụ sáng nay
+        </h3>
+        <div class="space-y-2.5">
+          <input type="text" id="questInput" placeholder="Ví dụ: Chạy bộ 5km, Đọc tài liệu phẫu thuật..." 
+                 class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+          <div class="flex gap-2">
+            <select id="statSelect" class="flex-1 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-slate-300 font-semibold focus:outline-none">
+              <option value="STR">💪 STR - Thể lực & Sức bền</option>
+              <option value="INT">🧠 INT - Trí tuệ & Y khoa</option>
+              <option value="WIS">📈 WIS - Tài chính & Đầu tư</option>
+              <option value="CHA">👑 CHA - Quản trị & Lãnh đạo</option>
+              <option value="SPI">❤️ SPI - Hôn nhân & Gia đình</option>
+            </select>
+            <select id="diffSelect" class="w-28 bg-slate-900/90 border border-slate-700 rounded-xl px-2.5 py-2 text-xs text-slate-300 font-semibold focus:outline-none">
+              <option value="easy">Dễ (+15 EXP)</option>
+              <option value="medium" selected>Vừa (+30 EXP)</option>
+              <option value="hard">Khó (+60 EXP)</option>
+            </select>
+          </div>
+          <button onclick="addQuest()" class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-[0.99] text-white font-bold py-2.5 rounded-xl text-sm transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-1.5">
+            <i class="ph-bold ph-plus-circle"></i> Thêm vào danh sách ngày
+          </button>
+        </div>
+      </div>
+
+      <!-- Danh sách nhiệm vụ chưa làm -->
+      <div>
+        <div class="flex justify-between items-center mb-2 px-1">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Cần hoàn thành</span>
+          <span class="text-xs text-indigo-400 font-bold" id="questCount">0 nhiệm vụ</span>
+        </div>
+        <div id="questList" class="space-y-2">
+          <!-- Render tự động -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: CỬA HÀNG ĐỔI THƯỞNG (SHOP) -->
+    <div id="tab-shop" class="space-y-4 hidden">
+      <!-- Shop Đời Thực -->
+      <div class="glass-card rounded-2xl p-4">
+        <h3 class="text-sm font-bold text-amber-400 mb-1 flex items-center gap-2">
+          <i class="ph-bold ph-gift text-base"></i> Kho Phần Thưởng Đời Thực
+        </h3>
+        <p class="text-xs text-slate-400 mb-3">Dùng vàng cày được để tận hưởng thành quả không áy náy.</p>
+        <div class="space-y-2" id="realShopList">
+          <!-- Render rewards -->
+        </div>
+      </div>
+
+      <!-- Shop Đồ Ảo / Xây Nhà -->
+      <div class="glass-card rounded-2xl p-4">
+        <h3 class="text-sm font-bold text-indigo-400 mb-1 flex items-center gap-2">
+          <i class="ph-bold ph-shield-chevron text-base"></i> Trang Bị & Dinh Thự
+        </h3>
+        <p class="text-xs text-slate-400 mb-3">Nâng cấp diện mạo và cơ ngơi của nhân vật.</p>
+        <div class="space-y-2" id="virtualShopList">
+          <!-- Render items -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- THANH ĐIỀU HƯỚNG DƯỚI ĐÁY (BOTTOM NAV) -->
+  <nav class="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-[#090d16]/95 backdrop-blur-lg border-t border-slate-800 p-2 flex justify-around z-50">
+    <button onclick="switchTab('quests')" id="nav-quests" class="flex flex-col items-center gap-1 text-indigo-400 font-bold py-1 px-4 rounded-xl">
+      <i class="ph-fill ph-sword text-xl"></i>
+      <span class="text-[11px]">Nhiệm vụ</span>
+    </button>
+    <button onclick="switchTab('shop')" id="nav-shop" class="flex flex-col items-center gap-1 text-slate-500 font-bold py-1 px-4 rounded-xl">
+      <i class="ph-bold ph-storefront text-xl"></i>
+      <span class="text-[11px]">Cửa hàng</span>
+    </button>
+  </nav>
+
+  <!-- JAVASCRIPT ENGINE CỦA GAME -->
+  <script>
+    // 1. DỮ LIỆU CỐT LÕI (LƯU TRONG LOCALSTORAGE)
+    const DEFAULT_DATA = {
+      level: 1,
+      exp: 0,
+      gold: 50,
+      avatar: '⚔️',
+      title: 'Chiến Binh Tập Sự',
+      stats: { STR: 5, INT: 5, WIS: 5, CHA: 5, SPI: 5 },
+      quests: [
+        { id: 1, text: 'Chạy bộ 5km phục hồi thể lực', stat: 'STR', exp: 30, gold: 20 },
+        { id: 2, text: 'Duyệt hồ sơ bệnh án trước ca mổ', stat: 'INT', exp: 30, gold: 20 },
+        { id: 3, text: '15 phút trò chuyện cùng vợ', stat: 'SPI', exp: 15, gold: 10 }
+      ],
+      purchased: []
+    };
+
+    let state = JSON.parse(localStorage.getItem('LIFE_RPG_DATA')) || DEFAULT_DATA;
+
+    function saveState() {
+      localStorage.setItem('LIFE_RPG_DATA', JSON.stringify(state));
+      renderUI();
+    }
+
+    // 2. TÍNH TOÁN LEVEL THEO EXP
+    function getExpRequired(level) {
+      return level * 100;
+    }
+
+    function checkLevelUp() {
+      let required = getExpRequired(state.level);
+      if (state.exp >= required) {
+        state.exp -= required;
+        state.level += 1;
+        
+        // Nâng cấp danh hiệu tự động
+        if (state.level === 3) state.title = 'Chiến Binh Kiên Định';
+        if (state.level === 5) state.title = 'Tông Sư Ngoại Khoa';
+        if (state.level === 10) state.title = 'Bậc Thầy Cuộc Sống';
+
+        // Bắn pháo hoa ăn mừng
+        confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
+        alert(`🎉 CHÚC MỪNG BẠN ĐÃ THĂNG CẤP LÊN CẤP ${state.level}! Danh hiệu mới: ${state.title}`);
+        checkLevelUp(); // Đề phòng trường hợp dư nhiều exp lên tiếp
+      }
+    }
+
+    // 3. THÊM VÀ HOÀN THÀNH NHIỆM VỤ
+    function addQuest() {
+      const input = document.getElementById('questInput');
+      const stat = document.getElementById('statSelect').value;
+      const diff = document.getElementById('diffSelect').value;
+      const text = input.value.trim();
+      if (!text) return;
+
+      let exp = 15, gold = 10;
+      if (diff === 'medium') { exp = 30; gold = 25; }
+      if (diff === 'hard') { exp = 60; gold = 50; }
+
+      state.quests.unshift({
+        id: Date.now(),
+        text,
+        stat,
+        exp,
+        gold
+      });
+
+      input.value = '';
+      saveState();
+    }
+
+    function completeQuest(id) {
+      const qIndex = state.quests.findIndex(q => q.id === id);
+      if (qIndex === -1) return;
+      const q = state.quests[qIndex];
+
+      // Cộng điểm
+      state.exp += q.exp;
+      state.gold += q.gold;
+      state.stats[q.stat] = (state.stats[q.stat] || 0) + 1;
+      state.quests.splice(qIndex, 1);
+
+      checkLevelUp();
+      saveState();
+    }
+
+    // 4. DANH MỤC CỬA HÀNG
+    const REAL_REWARDS = [
+      { id: 'r1', name: '30 phút chơi game xả hơi', price: 50, icon: '🎮' },
+      { id: 'r2', name: 'Mua 1 cuốn sách yêu thích', price: 200, icon: '📚' },
+      { id: 'r3', name: 'Bữa ăn ngon tự thưởng', price: 350, icon: '🥩' },
+      { id: 'r4', name: 'Mua đồ chạy bộ / thể thao mới', price: 1500, icon: '👟' }
+    ];
+
+    const VIRTUAL_ITEMS = [
+      { id: 'v1', name: 'Dao Mổ Titan Huyền Thoại', price: 150, avatar: '🗡️' },
+      { id: 'v2', name: 'Biệt Thự Nghỉ Dưỡng Ven Biển', price: 500, avatar: '🏰' },
+      { id: 'v3', name: 'Giáp Đế Vương Doanh Nhân', price: 800, avatar: '👑' }
+    ];
+
+    function buyItem(type, id, price, avatar) {
+      if (state.gold < price) {
+        alert('❌ Bạn chưa đủ vàng! Hãy hoàn thành thêm nhiệm vụ.');
+        return;
+      }
+      state.gold -= price;
+      if (type === 'virtual') {
+        state.avatar = avatar;
+        state.purchased.push(id);
+        alert('✨ Đã mua thành công và thay đổi ngoại hình!');
+      } else {
+        alert('🎁 Đã quy đổi thành công phần thưởng đời thực!');
+      }
+      saveState();
+    }
+
+    // 5. RENDER GIAO DIỆN
+    function renderUI() {
+      // Top stats
+      document.getElementById('avatarBox').innerText = state.avatar;
+      document.getElementById('charTitle').innerText = state.title;
+      document.getElementById('levelBadge').innerText = `Cấp ${state.level}`;
+      document.getElementById('goldVal').innerText = state.gold;
+      
+      const reqExp = getExpRequired(state.level);
+      document.getElementById('expBar').style.width = `${Math.min(100, (state.exp / reqExp) * 100)}%`;
+      document.getElementById('expText').innerText = `${state.exp} / ${reqExp} EXP`;
+
+      // Stats
+      for (let s in state.stats) {
+        const el = document.getElementById(`stat_${s}`);
+        if (el) el.innerText = state.stats[s];
+      }
+
+      // Quests list
+      const qListEl = document.getElementById('questList');
+      document.getElementById('questCount').innerText = `${state.quests.length} nhiệm vụ`;
+      qListEl.innerHTML = '';
+
+      if (state.quests.length === 0) {
+        qListEl.innerHTML = `
+          <div class="text-center py-8 text-slate-500 text-xs">
+            <i class="ph-bold ph-check-circle text-2xl text-emerald-500 mb-1 block"></i>
+            Tất cả nhiệm vụ đã hoàn tất! Hãy tạo thêm nhiệm vụ mới.
+          </div>`;
+      } else {
+        state.quests.forEach(q => {
+          const div = document.createElement('div');
+          div.className = 'glass-card p-3 rounded-xl flex items-center justify-between border border-slate-800 hover:border-slate-700 transition';
+          div.innerHTML = `
+            <div class="flex-1 pr-3">
+              <div class="text-xs font-semibold text-slate-100">${q.text}</div>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-400 font-bold border border-indigo-500/20">+1 ${q.stat}</span>
+                <span class="text-[10px] text-slate-400 font-medium">+${q.exp} EXP</span>
+                <span class="text-[10px] text-amber-400 font-bold">+${q.gold} Vàng</span>
+              </div>
+            </div>
+            <button onclick="completeQuest(${q.id})" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold text-xs rounded-lg transition shadow-md shadow-emerald-600/20 flex items-center gap-1">
+              <i class="ph-bold ph-check"></i> Xong
+            </button>
+          `;
+          qListEl.appendChild(div);
+        });
+      }
+
+      // Shop lists
+      const realList = document.getElementById('realShopList');
+      realList.innerHTML = REAL_REWARDS.map(r => `
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+          <div class="flex items-center gap-2.5">
+            <span class="text-xl">${r.icon}</span>
+            <div>
+              <div class="text-xs font-bold text-slate-200">${r.name}</div>
+              <div class="text-[10px] text-amber-400 font-extrabold flex items-center gap-0.5 mt-0.5">
+                <i class="ph-fill ph-coins"></i> ${r.price} Vàng
+              </div>
+            </div>
+          </div>
+          <button onclick="buyItem('real', '${r.id}', ${r.price})" class="px-3 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold rounded-lg border border-amber-500/30">Đổi</button>
+        </div>
+      `).join('');
+
+      const virtList = document.getElementById('virtualShopList');
+      virtList.innerHTML = VIRTUAL_ITEMS.map(v => `
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
+          <div class="flex items-center gap-2.5">
+            <span class="text-xl">${v.avatar}</span>
+            <div>
+              <div class="text-xs font-bold text-slate-200">${v.name}</div>
+              <div class="text-[10px] text-amber-400 font-extrabold flex items-center gap-0.5 mt-0.5">
+                <i class="ph-fill ph-coins"></i> ${v.price} Vàng
+              </div>
+            </div>
+          </div>
+          <button onclick="buyItem('virtual', '${v.id}', ${v.price}, '${v.avatar}')" class="px-3 py-1 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 text-xs font-bold rounded-lg border border-indigo-500/30">Trang bị</button>
+        </div>
+      `).join('');
+    }
+
+    // 6. CHUYỂN TAB
+    function switchTab(tab) {
+      if (tab === 'quests') {
+        document.getElementById('tab-quests').classList.remove('hidden');
+        document.getElementById('tab-shop').classList.add('hidden');
+        document.getElementById('nav-quests').className = 'flex flex-col items-center gap-1 text-indigo-400 font-bold py-1 px-4 rounded-xl';
+        document.getElementById('nav-shop').className = 'flex flex-col items-center gap-1 text-slate-500 font-bold py-1 px-4 rounded-xl';
+      } else {
+        document.getElementById('tab-quests').classList.add('hidden');
+        document.getElementById('tab-shop').classList.remove('hidden');
+        document.getElementById('nav-quests').className = 'flex flex-col items-center gap-1 text-slate-500 font-bold py-1 px-4 rounded-xl';
+        document.getElementById('nav-shop').className = 'flex flex-col items-center gap-1 text-amber-400 font-bold py-1 px-4 rounded-xl';
+      }
+    }
+
+    // Khởi chạy lần đầu
+    renderUI();
+  </script>
+</body>
+</html>
